@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Shield, Swords, Zap } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const strategies = [
   { id: "defend", name: "Defend", icon: Shield, color: "hsl(210 100% 65%)" },
@@ -8,9 +8,14 @@ const strategies = [
   { id: "counter", name: "Counter", icon: Zap, color: "hsl(188 95% 60%)" },
 ];
 
-export const StrategySelector = () => {
+interface StrategySelectorProps {
+  onStrategyLocked: (strategy: string) => void;
+}
+
+export const StrategySelector = ({ onStrategyLocked }: StrategySelectorProps) => {
   const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState(false);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
   const handleSelect = (strategyId: string) => {
     if (!isLocked) {
@@ -21,15 +26,31 @@ export const StrategySelector = () => {
   const handleLock = () => {
     if (selectedStrategy) {
       setIsLocked(true);
+      setWaitingForOpponent(true);
     }
   };
+  
+  useEffect(() => {
+    if (waitingForOpponent) {
+      // Simulate opponent locking their choice after 2-3 seconds
+      const timeout = setTimeout(() => {
+        onStrategyLocked(selectedStrategy!);
+      }, 2500);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [waitingForOpponent, selectedStrategy, onStrategyLocked]);
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold glow-text">Select Your Strategy</h2>
         <p className="text-sm text-muted-foreground">
-          {isLocked ? "Strategy Encrypted - Waiting for opponent..." : "Choose wisely. Your choice will be encrypted."}
+          {waitingForOpponent 
+            ? "Strategy Encrypted - Waiting for opponent..." 
+            : isLocked 
+            ? "Strategy locked and encrypted" 
+            : "Choose wisely. Your choice will be encrypted."}
         </p>
       </div>
 

@@ -2,10 +2,33 @@ import { GameHeader } from "@/components/GameHeader";
 import { GameFooter } from "@/components/GameFooter";
 import { WalletConnect } from "@/components/WalletConnect";
 import { StrategySelector } from "@/components/StrategySelector";
+import { MatchmakingStatus } from "@/components/MatchmakingStatus";
+import { GameResult } from "@/components/GameResult";
 import { useState } from "react";
 
+type GameState = "wallet" | "matchmaking" | "strategy" | "result";
+
 const Index = () => {
-  const [isConnected, setIsConnected] = useState(false);
+  const [gameState, setGameState] = useState<GameState>("wallet");
+  const [playerStrategy, setPlayerStrategy] = useState<string>("");
+  
+  const handleWalletConnect = () => {
+    setGameState("matchmaking");
+  };
+  
+  const handleMatchFound = () => {
+    setGameState("strategy");
+  };
+  
+  const handleStrategyLocked = (strategy: string) => {
+    setPlayerStrategy(strategy);
+    setGameState("result");
+  };
+  
+  const handlePlayAgain = () => {
+    setPlayerStrategy("");
+    setGameState("matchmaking");
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -25,11 +48,10 @@ const Index = () => {
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg blur-3xl" />
             <div className="relative bg-card/30 backdrop-blur-md rounded-lg p-8 border border-border/50">
-              {!isConnected ? (
-                <WalletConnect />
-              ) : (
-                <StrategySelector />
-              )}
+              {gameState === "wallet" && <WalletConnect onConnect={handleWalletConnect} />}
+              {gameState === "matchmaking" && <MatchmakingStatus onMatchFound={handleMatchFound} />}
+              {gameState === "strategy" && <StrategySelector onStrategyLocked={handleStrategyLocked} />}
+              {gameState === "result" && <GameResult playerChoice={playerStrategy} onPlayAgain={handlePlayAgain} />}
             </div>
           </div>
 
@@ -60,14 +82,6 @@ const Index = () => {
       </main>
 
       <GameFooter />
-      
-      {/* Demo toggle for wallet connection */}
-      <button
-        onClick={() => setIsConnected(!isConnected)}
-        className="fixed bottom-4 right-4 px-4 py-2 bg-muted/50 backdrop-blur-sm rounded-md text-xs border border-border/30 hover:bg-muted/80 transition-colors"
-      >
-        Demo: {isConnected ? "Disconnect" : "Connect"} Wallet
-      </button>
     </div>
   );
 };
